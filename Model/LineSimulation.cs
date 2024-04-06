@@ -43,6 +43,17 @@ public class LineSimulation
             {
                 delayedProducts.Add(product);
             }
+            
+            
+            
+        }
+        foreach (var item in workstations[0].Queue)
+        {
+            Console.WriteLine(item.Id);
+        }
+        foreach (var item in workstations[1].Queue)
+        {
+            Console.WriteLine(item.Id);
         }
     }
     private bool ProcessProduct(Item product)
@@ -67,16 +78,21 @@ public class LineSimulation
         {
             workstations[1].Queue.Enqueue(product);
         }
-        else
+        if (workstations[1].Queue.Count() > workstations[0].Queue.Count())
         {
             workstations[0].Queue.Enqueue(product);
+        }
+        else
+        {
+            var num = random.Next(0, 2);
+            workstations[num].Queue.Enqueue(product);
         }
         return false;
     }
     
     private void ProcessWorkstation(WorkStation workstation)
     {
-        if (workstation.Queue.Count > 0)
+        if (workstation.Queue.Count() == 4)
         {
             Item product = workstation.Queue.Dequeue();
             double processingTime = workstation.ProcessingTime;
