@@ -29,32 +29,31 @@ public class LineSimulation
     {
         for (int i = 0; i < numItems; i++)
         {
-            ProcessWorkstation(workstations[0]);
-            ProcessWorkstation(workstations[1]);
+            
             // Генерация времени поступления и времени обработки для нового изделия
-            var arrivalTime = currentTime + ExponentialRandom(0.4);
+            var delayTime = ExponentialRandom(0.4);
+            var arrivalTime = currentTime + delayTime;
             // double processingTime = random.NextDouble() < 0.5 ? 1.25 : 0.5;
-
+            
             Item product = new Item {Id = i, ArrivalTime = arrivalTime};
             currentTime = arrivalTime;
-
+            if ((ExponentialRandom(workstations[0].ProcessingTime) > delayTime && workstations[0].Queue.Count == 4) &&
+                (ExponentialRandom(workstations[1].ProcessingTime) > delayTime && workstations[1].Queue.Count == 4))
+            {
+                delayedProducts.Add(product);
+            }
             bool isDelayed = ProcessProduct(product); // Обработка нового изделия
             if (isDelayed)
             {
                 delayedProducts.Add(product);
             }
+            Console.WriteLine(delayTime);
             
-            
-            
+            ProcessWorkstation(workstations[0]);
+            ProcessWorkstation(workstations[1]);
         }
-        foreach (var item in workstations[0].Queue)
-        {
-            Console.WriteLine(item.Id);
-        }
-        foreach (var item in workstations[1].Queue)
-        {
-            Console.WriteLine(item.Id);
-        }
+
+        Console.WriteLine(delayedProducts.Count);
     }
     private bool ProcessProduct(Item product)
     {
@@ -96,7 +95,8 @@ public class LineSimulation
         {
             Item product = workstation.Queue.Dequeue();
             double processingTime = workstation.ProcessingTime;
-            currentTime += processingTime;
+            currentTime += ExponentialRandom(processingTime);
+            Console.WriteLine(ExponentialRandom(processingTime));
             // if (workstation == workstations[0] && workstations[1].Queue.Count < 2)
             // {
             //     ProcessWorkstation(workstations[1]);
