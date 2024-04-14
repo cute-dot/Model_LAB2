@@ -24,7 +24,7 @@ namespace Model
         {
             InitializeComponent();
             LineSimulation simulation = new LineSimulation();
-            simulation.Simulate(500);
+            simulation.Simulate(50);
         }
     }
 }

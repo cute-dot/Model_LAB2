@@ -7,7 +7,8 @@ namespace Model;
 public class LineSimulation
 {
     private List<WorkStation> workstations; // Список рабочих мест
-    private List<Item> delayedProducts; // Список отложенных изделий
+    private List<Item> delayedProducts;
+    private List<Item> delayedProducts2;// Список отложенных изделий
     private double currentTime; // Текущее время моделирования
     private Random random;
     
@@ -21,6 +22,7 @@ public class LineSimulation
         };
 
         delayedProducts = new List<Item>();
+        delayedProducts2 = new List<Item>();
         currentTime = 0;
         random = new Random();
     }
@@ -36,76 +38,74 @@ public class LineSimulation
             // double processingTime = random.NextDouble() < 0.5 ? 1.25 : 0.5;
             
             Item product = new Item {Id = i, ArrivalTime = arrivalTime};
-            currentTime = arrivalTime;
-            if ((ExponentialRandom(workstations[0].ProcessingTime) > delayTime && workstations[0].Queue.Count == 4) &&
-                (ExponentialRandom(workstations[1].ProcessingTime) > delayTime && workstations[1].Queue.Count == 4))
-            {
-                delayedProducts.Add(product);
-            }
-            bool isDelayed = ProcessProduct(product); // Обработка нового изделия
-            if (isDelayed)
-            {
-                delayedProducts.Add(product);
-            }
-            Console.WriteLine(delayTime);
+
+            ProcessProductForFirstWorkStation(product, delayTime);
             
             ProcessWorkstation(workstations[0]);
             ProcessWorkstation(workstations[1]);
+            // }
         }
 
         Console.WriteLine(delayedProducts.Count);
     }
-    private bool ProcessProduct(Item product)
+    private void ProcessProductForFirstWorkStation(Item product, double delayTime)
     {
-        if (workstations[0].Queue.Count + workstations[1].Queue.Count >= 8)
+        if (workstations[0].IsBlocked == false)
         {
-            return true;
-        }
-        //
-        // if (workstations[1].Queue.Count >= 2)
-        // {
-        //     workstations[0].IsBlocked = true;
-        //     return true;
-        // }
-        //
-        // if (workstations[0].IsBlocked)
-        // {
-        //     return true;
-        // }
-
-        if (workstations[0].Queue.Count() > workstations[1].Queue.Count())
-        {
-            workstations[1].Queue.Enqueue(product);
-        }
-        if (workstations[1].Queue.Count() > workstations[0].Queue.Count())
-        {
-            workstations[0].Queue.Enqueue(product);
+            if (workstations[0].Queue.Count <= 4)
+            {
+                workstations[0].Queue.Enqueue(product);
+            }
+            if (ExponentialRandom(workstations[0].ProcessingTime) > delayTime)
+            {
+                delayedProducts.Add(product);
+                Console.WriteLine("product v delay");
+            }
         }
         else
         {
-            var num = random.Next(0, 2);
-            workstations[num].Queue.Enqueue(product);
+            delayedProducts.Add(product);
+            Console.WriteLine("product v delay");
         }
-        return false;
     }
-    
+    private void ProcessProductForSecWorkStation(Item product)
+    {
+        if (workstations[1].Queue.Count <= 2)
+        {
+            workstations[1].Queue.Enqueue(product);
+            
+        }
+        else
+        {
+            workstations[0].IsBlocked = true;
+        }
+        
+    }
     private void ProcessWorkstation(WorkStation workstation)
     {
-        if (workstation.Queue.Count() == 4)
+        if (workstation == workstations[0] && workstation.Queue.Count() > 0 && workstation.IsBlocked != true)
         {
             Item product = workstation.Queue.Dequeue();
             double processingTime = workstation.ProcessingTime;
             currentTime += ExponentialRandom(processingTime);
+            if (workstation == workstations[0])
+            {
+                ProcessProductForSecWorkStation(product);
+            }
             Console.WriteLine(ExponentialRandom(processingTime));
-            // if (workstation == workstations[0] && workstations[1].Queue.Count < 2)
-            // {
-            //     ProcessWorkstation(workstations[1]);
-            //     workstation.IsBlocked = false;
-            // }
-            Console.WriteLine(currentTime);
+            Console.WriteLine($"Текущее время обработки всех элементов {currentTime}");
             Console.WriteLine($"Изделие {product.Id} обработано на рабочем месте {workstation.Id} за время {processingTime}");
         }
-        
+        if(workstation == workstations[1] && workstations[1].Queue.Count > 0)
+        {
+            Item product = workstation.Queue.Dequeue();
+            double processingTime = workstation.ProcessingTime;
+            currentTime += ExponentialRandom(processingTime);
+            workstations[0].IsBlocked = false;
+            Console.WriteLine(ExponentialRandom(processingTime));
+            Console.WriteLine($"Текущее время обработки всех элементов {currentTime}");
+            Console.WriteLine($"Изделие {product.Id} обработано на рабочем месте {workstation.Id} за время {processingTime}");
+        }
     }
     
     public double ExponentialRandom(double lambda)
